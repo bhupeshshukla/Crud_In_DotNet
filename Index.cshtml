@@ -1,0 +1,245 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Index</h2>
+
+<table>
+    <tr>
+        <td>Name:</td>
+        <td><input type="text" id="textname" /></td>
+    </tr>
+
+    <tr>
+        <td>Roll_No:</td>
+        <td><input type="text" id="textroll" /></td>
+    </tr>
+
+    <tr>
+        <td>Gender:</td>
+        <td>
+            Male <input type="radio" name="gender" id="rdgender1" value="male" />
+            Female <input type="radio" name="gender" id="rdgender2" value="female" />
+            Other <input type="radio" name="gender" id="rdgender3" value="other" />
+        </td>
+    </tr>
+
+    <tr>
+        <td>Country:</td>
+        <td>
+            <select id="ddlcountry" onchange="StateBind()">
+                <option value="0">---select---</option>
+            </select>
+        </td>
+    </tr>
+
+    <tr>
+        <td>State:</td>
+        <td>
+            <select id="ddlstate">
+                <option value="0">---select---</option>
+            </select>
+        </td>
+    </tr>
+
+    <tr>
+        <td>Checkbox:</td>
+        <td><input type="checkbox" id="check" /></td>
+    </tr>
+
+    <tr>
+        <td>Reg_No:</td>
+        <td><input type="text" id="textreg" /></td>
+    </tr>
+
+    <tr>
+        <td></td>
+        <td><input type="button" id="btnsubmit" value="submit" onclick="Insert()" /></td>
+    </tr>
+</table>
+
+<br />
+
+<table id="tbl" style="background-color:aquamarine" width="800px">
+    <tr>
+        <td>ID</td>
+        <td>Name</td>
+        <td>Roll-No</td>
+        <td>Gender</td>
+        <td>Country</td>
+        <td>State</td>
+        <td>Checkbox</td>
+        <td>Reg-No</td>
+    </tr>
+</table>
+
+<script src="~/Scripts/jquery-3.7.0.min.js"></script>
+<script type="text/javascript">
+
+    var IDDD = 0;
+
+    $(document).ready(function () {
+        ShowData();
+        CountryBind();
+    });
+
+    function Insert() {
+        if ($("#btnsubmit").val() == "submit") {
+            $.ajax({
+                url: 'Default/InsertData',
+                type: 'post',
+                data: {
+                    Name: $("#textname").val(),
+                    Roll_No: $("#textroll").val(),
+                    Gender: $('input[name="gender"]:checked').val(),
+                    Country: $("#ddlcountry").val(),
+                    State: $("#ddlstate").val(),
+                    Checkbox: $('#check').is(':checked'),
+                    Reg_No: $("#textreg").val()
+                },
+                success: function () {
+                    alert('data is inserted');
+                    ShowData();
+                    clear();
+                },
+                error: function () {
+                    alert('data is not inserted');
+                }
+            });
+        }
+        else if ($("#btnsubmit").val() == "update") {
+            $.ajax({
+                url: 'Default/UpdateData',
+                type: 'post',
+                data: {
+                    Id: IDDD,
+                    Name: $("#textname").val(),
+                    Roll_No: $("#textroll").val(),
+                    Gender: $('input[name="gender"]:checked').val(),
+                    Country: $("#ddlcountry").val(),
+                    State: $("#ddlstate").val(),
+                    Checkbox: $('#check').is(':checked'),
+                    Reg_No: $("#textreg").val()
+                },
+                success: function () {
+                    alert('data is updated');
+                    ShowData();
+                    clear();
+                },
+                error: function () {
+                    alert('data is not updated');
+                }
+            });
+        }
+        
+    }
+
+    function ShowData() {
+        $.ajax({
+            url: 'Default/Show',
+            type: 'post',
+            data: {},
+            success: function (data) {
+                data = JSON.parse(data);
+                $("#tbl").find("tr:gt(0)").remove();
+                for (var i = 0; i < data.length; i++) {
+                    $("#tbl").append('<tr> <td>' + data[i].id + ' </td> <td>' + data[i].name + '</td> <td>' + data[i].roll_no + '</td> <td>' + data[i].gender + '</td> <td>' + data[i].cname + '</td> <td> ' + data[i].sname + '</td> <td>' + data[i].checkbox + '</td> <td>' + data[i].reg_no + '</td>  <td> <input type="button"  id="btndelete" value="Delete" onclick="Delete(' + data[i].id + ')"/> </td> <td><input type="button"  id="btndedit" value="Edit" onclick="Edit(' + data[i].id + ')"/></td> </tr>')
+                }
+            },
+            error: function () {
+                alert('data is not inserted ');
+            }
+        });
+    }
+
+    function Delete(id) {
+        $.ajax({
+            url: 'Default/DeleteData',
+            type: 'post',
+            data: {Id : id},
+            success: function () {
+                alert('data is deleted ');
+                ShowData();
+            },
+            error: function () {
+                alert('data is not deleted ');
+            }
+        });
+    }
+
+    function Edit(id) {
+        $.ajax({
+            url: 'Default/EditData',
+            type: 'post',
+            data: { Id: id },
+            async: false ,
+            success: function (data) {
+                data = JSON.parse(data);
+                    $("#textname").val(data[0].name);
+                    $("#textroll").val(data[0].roll_no);
+                    $('input[name="gender"][value="' + data[0].gender + '"]').prop("checked", true);
+                    $("#ddlcountry").val(data[0].country),
+                    StateBind();
+                    $("#ddlstate").val(data[0].state),
+                    $('#check').prop('checked', data[0].checkbox); 
+                    $("#textreg").val(data[0].reg_no);
+                    $("#btnsubmit").val("update");
+                    IDDD = id
+            },
+            error: function () {
+                alert('data is not deleted ');
+            }
+        });
+    }
+
+    function CountryBind() {
+       $.ajax({
+           url: 'Default/ShowCountry',
+          type: 'post',
+          data: {},
+          success: function (data) {
+              data = JSON.parse(data);
+                for (var i = 0; i < data.length; i++) {
+                   $("#ddlcountry").append($("<option></option>").html(data[i].cname).val(data[i].cid))
+               }
+           },
+           error: function () {
+               alert('error during binding ');
+           }
+       });
+    }
+
+    function StateBind() {
+        $.ajax({
+            url: 'Default/ShowState',
+            type: 'post',
+            data: { cid: $("#ddlcountry").val() },
+            async : false,
+            success: function (data) {
+                data = JSON.parse(data);
+                $("#ddlstate").empty()
+                $("#ddlstate").append($("<option></option>").html("--select--").val("0"));
+                for (var i = 0; i < data.length; i++) {
+                    $("#ddlstate").append($("<option></option>").html(data[i].sname).val(data[i].sid))
+                }
+            },
+            error: function () {
+                alert('error during binding ');
+            }
+        });
+    }
+
+    function clear() {
+        $("#textname").val('');
+        $("#textroll").val('');
+        $('input[name="gender"]').prop('checked', false);
+        $("#ddlcountry").val("0");
+        $("#ddlstate").val("0");
+        $('#check').prop('checked', false);
+        $("#textreg").val('');
+        $("#btnsubmit").val("submit");
+    }
+
+</script>
+
